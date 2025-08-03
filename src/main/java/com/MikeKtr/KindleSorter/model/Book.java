@@ -17,6 +17,7 @@ public class Book {
 	private int Id;
 	private String title;
 	
+	
 	@OneToMany
 	@JoinColumn(name = "quote_id")
 	private List<Quote> quotes = new ArrayList();

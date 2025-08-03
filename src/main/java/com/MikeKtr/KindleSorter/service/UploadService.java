@@ -1,19 +1,23 @@
 package com.MikeKtr.KindleSorter.service;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.MikeKtr.KindleSorter.model.Author;
 import com.MikeKtr.KindleSorter.model.Book;
 import com.MikeKtr.KindleSorter.model.Quote;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-
-import org.springframework.http.ResponseEntity;
-
 import com.MikeKtr.KindleSorter.repository.AuthorRepository;
 import com.MikeKtr.KindleSorter.repository.BookRepository;
 import com.MikeKtr.KindleSorter.repository.QuoteRepository;
@@ -32,6 +36,22 @@ public class UploadService {
 		this.bookRepo = br;
 		this.quoteRepo = qr;
 	}
+
+	public static LocalDateTime processDateLine(String dateLine){
+		dateLine = dateLine.substring(dateLine.lastIndexOf(',') + 2);
+        System.out.println(dateLine);
+        DateTimeFormatter format = DateTimeFormatter.ofPattern("d MMMM yyyy HH:mm:ss", Locale.ENGLISH);
+        LocalDateTime dateTime = LocalDateTime.parse(dateLine,format);
+        return dateTime;
+        }
+
+	public static Integer processPageLine(String dateLine){
+		Matcher matcher = Pattern.compile("\\d+").matcher(dateLine);
+		matcher.find();
+		int page = Integer.valueOf(matcher.group());
+		return page;
+	}
+
 	@Transactional
 	public ResponseEntity<String> readClippingFromFolder(MultipartFile file){
 
@@ -80,9 +100,10 @@ public class UploadService {
 					FullQuote += quoteText;
 				}
 
-
-				Quote q = new Quote(FullQuote,book);
-				
+				LocalDateTime saveData= processDateLine(dateLine);
+				Integer page = processPageLine(dateLine);
+				Quote q = new Quote(FullQuote,book,saveData,page);
+				System.out.println(dateLine);
 				quoteRepo.save(q);
 
 				
